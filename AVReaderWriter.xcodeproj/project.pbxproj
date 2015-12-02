@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AF4803F01C0F0CF1006EBAB5 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = AF4803EF1C0F0CF1006EBAB5 /* README.md */; };
 		EE33EA6D1370DF3100F77FCE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EE33EA6B1370DF3100F77FCE /* InfoPlist.strings */; };
 		EE33EA701370DF3100F77FCE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = EE33EA6F1370DF3100F77FCE /* main.m */; };
 		EE33EA761370DF3100F77FCE /* AAPLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = EE33EA751370DF3100F77FCE /* AAPLDocument.m */; };
@@ -19,7 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3E7D60AB1B1FA25E001EAE8D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		AF4803EF1C0F0CF1006EBAB5 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		EE33EA5E1370DF3100F77FCE /* AVReaderWriter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AVReaderWriter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE33EA6A1370DF3100F77FCE /* AVReaderWriterOSX-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "AVReaderWriterOSX-Info.plist"; sourceTree = "<group>"; };
 		EE33EA6C1370DF3100F77FCE /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -49,7 +50,7 @@
 		EE33EA531370DF3100F77FCE = {
 			isa = PBXGroup;
 			children = (
-				3E7D60AB1B1FA25E001EAE8D /* README.md */,
+				AF4803EF1C0F0CF1006EBAB5 /* README.md */,
 				EE33EA681370DF3100F77FCE /* AVReaderWriterOSX */,
 				EE33EA5F1370DF3100F77FCE /* Products */,
 			);
@@ -167,6 +168,7 @@
 			files = (
 				EE33EA701370DF3100F77FCE /* main.m in Sources */,
 				EE33EA761370DF3100F77FCE /* AAPLDocument.m in Sources */,
+				AF4803F01C0F0CF1006EBAB5 /* README.md in Sources */,
 				EEB8F96C1399AF67004FEB2E /* AAPLProgressPanelController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
