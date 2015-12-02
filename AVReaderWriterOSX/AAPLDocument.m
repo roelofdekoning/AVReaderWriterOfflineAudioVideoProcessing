@@ -275,112 +275,129 @@
 		
 		if (audioTrack)
 		{
-			// Decompress to Linear PCM with the asset reader
-			NSDictionary *decompressionAudioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-														[NSNumber numberWithUnsignedInt:kAudioFormatLinearPCM], AVFormatIDKey,
-														nil];
-			AVAssetReaderOutput *output = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:audioTrack outputSettings:decompressionAudioSettings];
-			[assetReader addOutput:output];
-			
-			AudioChannelLayout stereoChannelLayout = {
-				.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo,
-				.mChannelBitmap = 0,
-				.mNumberChannelDescriptions = 0
-			};
-			NSData *channelLayoutAsData = [NSData dataWithBytes:&stereoChannelLayout length:offsetof(AudioChannelLayout, mChannelDescriptions)];
-
-			// Compress to 128kbps AAC with the asset writer
-			NSDictionary *compressionAudioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-													  [NSNumber numberWithUnsignedInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
-													  [NSNumber numberWithInteger:128000], AVEncoderBitRateKey,
-													  [NSNumber numberWithInteger:44100], AVSampleRateKey,
-													  channelLayoutAsData, AVChannelLayoutKey,
-													  [NSNumber numberWithUnsignedInteger:2], AVNumberOfChannelsKey,
-													  nil];
-			AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:[audioTrack mediaType] outputSettings:compressionAudioSettings];
-			[assetWriter addInput:input];
-			
-			// Create and save an instance of AAPLSampleBufferChannel, which will coordinate the work of reading and writing sample buffers
-			audioSampleBufferChannel = [[AAPLSampleBufferChannel alloc] initWithAssetReaderOutput:output assetWriterInput:input];
-		}
-		
-		if (videoTrack)
-		{
-			// Decompress to ARGB with the asset reader
-			NSDictionary *decompressionVideoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-														[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32ARGB], (id)kCVPixelBufferPixelFormatTypeKey,
-														[NSDictionary dictionary], (id)kCVPixelBufferIOSurfacePropertiesKey,
-														nil];
-			AVAssetReaderOutput *output = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:videoTrack outputSettings:decompressionVideoSettings];
-			[assetReader addOutput:output];
-			
-			// Get the format description of the track, to fill in attributes of the video stream that we don't want to change
-			CMFormatDescriptionRef formatDescription = NULL;
-			NSArray *formatDescriptions = [videoTrack formatDescriptions];
-			if ([formatDescriptions count] > 0)
-				formatDescription = (CMFormatDescriptionRef)[formatDescriptions objectAtIndex:0];
-			
-			// Grab track dimensions from format description
-			CGSize trackDimensions = {
-				.width = 0.0,
-				.height = 0.0,
-			};
-			if (formatDescription)
-				trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(formatDescription, false, false);
-			else
-				trackDimensions = [videoTrack naturalSize];
-
-			// Grab clean aperture, pixel aspect ratio from format description
-			NSDictionary *compressionSettings = nil;
-			if (formatDescription)
-			{
-				NSDictionary *cleanAperture = nil;
-				NSDictionary *pixelAspectRatio = nil;
-				CFDictionaryRef cleanApertureFromCMFormatDescription = CMFormatDescriptionGetExtension(formatDescription, kCMFormatDescriptionExtension_CleanAperture);
-				if (cleanApertureFromCMFormatDescription)
-				{
-					cleanAperture = [NSDictionary dictionaryWithObjectsAndKeys:
-									 CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureWidth), AVVideoCleanApertureWidthKey,
-									 CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureHeight), AVVideoCleanApertureHeightKey,
-									 CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureHorizontalOffset), AVVideoCleanApertureHorizontalOffsetKey,
-									 CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureVerticalOffset), AVVideoCleanApertureVerticalOffsetKey,
-									 nil];
-				}
-				CFDictionaryRef pixelAspectRatioFromCMFormatDescription = CMFormatDescriptionGetExtension(formatDescription, kCMFormatDescriptionExtension_PixelAspectRatio);
-				if (pixelAspectRatioFromCMFormatDescription)
-				{
-					pixelAspectRatio = [NSDictionary dictionaryWithObjectsAndKeys:
-										CFDictionaryGetValue(pixelAspectRatioFromCMFormatDescription, kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing), AVVideoPixelAspectRatioHorizontalSpacingKey,
-										CFDictionaryGetValue(pixelAspectRatioFromCMFormatDescription, kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing), AVVideoPixelAspectRatioVerticalSpacingKey,
-										nil];
-				}
-				
-				if (cleanAperture || pixelAspectRatio)
-				{
-					NSMutableDictionary *mutableCompressionSettings = [NSMutableDictionary dictionary];
-					if (cleanAperture)
-						[mutableCompressionSettings setObject:cleanAperture forKey:AVVideoCleanApertureKey];
-					if (pixelAspectRatio)
-						[mutableCompressionSettings setObject:pixelAspectRatio forKey:AVVideoPixelAspectRatioKey];
-					compressionSettings = mutableCompressionSettings;
-				}
-			}
-			
-			// Compress to H.264 with the asset writer
-			NSMutableDictionary *videoSettings = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-															 AVVideoCodecH264, AVVideoCodecKey,
-															 [NSNumber numberWithDouble:trackDimensions.width], AVVideoWidthKey,
-															 [NSNumber numberWithDouble:trackDimensions.height], AVVideoHeightKey,
-															 nil];
-			if (compressionSettings)
-				[videoSettings setObject:compressionSettings forKey:AVVideoCompressionPropertiesKey];
-			
-			AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:[videoTrack mediaType] outputSettings:videoSettings];
-			[assetWriter addInput:input];
-			
-			// Create and save an instance of AAPLSampleBufferChannel, which will coordinate the work of reading and writing sample buffers
-			videoSampleBufferChannel = [[AAPLSampleBufferChannel alloc] initWithAssetReaderOutput:output assetWriterInput:input];
-		}
+            NSDictionary *decompressionAudioSettings = nil;
+            NSDictionary *compressionAudioSettings = nil;
+            
+            if (self.shouldDecompressAudio) {
+                
+                // Decompress to Linear PCM with the asset reader
+                decompressionAudioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                              [NSNumber numberWithUnsignedInt:kAudioFormatLinearPCM], AVFormatIDKey,
+                                              nil];
+                
+                AudioChannelLayout stereoChannelLayout = {
+                    .mChannelLayoutTag = kAudioChannelLayoutTag_Stereo,
+                    .mChannelBitmap = 0,
+                    .mNumberChannelDescriptions = 0
+                };
+                NSData *channelLayoutAsData = [NSData dataWithBytes:&stereoChannelLayout length:offsetof(AudioChannelLayout, mChannelDescriptions)];
+                
+                // Compress to 128kbps AAC with the asset writer
+                compressionAudioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                            [NSNumber numberWithUnsignedInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
+                                            [NSNumber numberWithInteger:128000], AVEncoderBitRateKey,
+                                            [NSNumber numberWithInteger:44100], AVSampleRateKey,
+                                            channelLayoutAsData, AVChannelLayoutKey,
+                                            [NSNumber numberWithUnsignedInteger:2], AVNumberOfChannelsKey,
+                                            nil];
+            }
+            
+            AVAssetReaderOutput *output = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:audioTrack outputSettings:decompressionAudioSettings];
+            [assetReader addOutput:output];
+            
+            AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:[audioTrack mediaType] outputSettings:compressionAudioSettings];
+            [assetWriter addInput:input];
+            
+            // Create and save an instance of AAPLSampleBufferChannel, which will coordinate the work of reading and writing sample buffers
+            audioSampleBufferChannel = [[AAPLSampleBufferChannel alloc] initWithAssetReaderOutput:output assetWriterInput:input];
+        }
+        
+        if (videoTrack)
+        {
+            NSDictionary *decompressionVideoSettings = nil;
+            NSMutableDictionary *compressionVideoSettings = nil;
+            
+            if (self.shouldDecompressVideo) {
+                
+                // Decompress to ARGB with the asset reader
+                decompressionVideoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                              [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32ARGB], (id)kCVPixelBufferPixelFormatTypeKey,
+                                              [NSDictionary dictionary], (id)kCVPixelBufferIOSurfacePropertiesKey,
+                                              nil];
+                
+                
+                // Get the format description of the track, to fill in attributes of the video stream that we don't want to change
+                CMFormatDescriptionRef formatDescription = NULL;
+                NSArray *formatDescriptions = [videoTrack formatDescriptions];
+                if ([formatDescriptions count] > 0)
+                    formatDescription = (CMFormatDescriptionRef)[formatDescriptions objectAtIndex:0];
+                
+                // Grab track dimensions from format description
+                CGSize trackDimensions = {
+                    .width = 0.0,
+                    .height = 0.0,
+                };
+                if (formatDescription)
+                    trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(formatDescription, false, false);
+                else
+                    trackDimensions = [videoTrack naturalSize];
+                
+                // Grab clean aperture, pixel aspect ratio from format description
+                NSDictionary *compressionSettings = nil;
+                if (formatDescription)
+                {
+                    NSDictionary *cleanAperture = nil;
+                    NSDictionary *pixelAspectRatio = nil;
+                    CFDictionaryRef cleanApertureFromCMFormatDescription = CMFormatDescriptionGetExtension(formatDescription, kCMFormatDescriptionExtension_CleanAperture);
+                    if (cleanApertureFromCMFormatDescription)
+                    {
+                        cleanAperture = [NSDictionary dictionaryWithObjectsAndKeys:
+                                         CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureWidth), AVVideoCleanApertureWidthKey,
+                                         CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureHeight), AVVideoCleanApertureHeightKey,
+                                         CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureHorizontalOffset), AVVideoCleanApertureHorizontalOffsetKey,
+                                         CFDictionaryGetValue(cleanApertureFromCMFormatDescription, kCMFormatDescriptionKey_CleanApertureVerticalOffset), AVVideoCleanApertureVerticalOffsetKey,
+                                         nil];
+                    }
+                    CFDictionaryRef pixelAspectRatioFromCMFormatDescription = CMFormatDescriptionGetExtension(formatDescription, kCMFormatDescriptionExtension_PixelAspectRatio);
+                    if (pixelAspectRatioFromCMFormatDescription)
+                    {
+                        pixelAspectRatio = [NSDictionary dictionaryWithObjectsAndKeys:
+                                            CFDictionaryGetValue(pixelAspectRatioFromCMFormatDescription, kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing), AVVideoPixelAspectRatioHorizontalSpacingKey,
+                                            CFDictionaryGetValue(pixelAspectRatioFromCMFormatDescription, kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing), AVVideoPixelAspectRatioVerticalSpacingKey,
+                                            nil];
+                    }
+                    
+                    if (cleanAperture || pixelAspectRatio)
+                    {
+                        NSMutableDictionary *mutableCompressionSettings = [NSMutableDictionary dictionary];
+                        if (cleanAperture)
+                            [mutableCompressionSettings setObject:cleanAperture forKey:AVVideoCleanApertureKey];
+                        if (pixelAspectRatio)
+                            [mutableCompressionSettings setObject:pixelAspectRatio forKey:AVVideoPixelAspectRatioKey];
+                        compressionSettings = mutableCompressionSettings;
+                    }
+                }
+                
+                // Compress to H.264 with the asset writer
+                compressionVideoSettings = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                            AVVideoCodecH264, AVVideoCodecKey,
+                                            [NSNumber numberWithDouble:trackDimensions.width], AVVideoWidthKey,
+                                            [NSNumber numberWithDouble:trackDimensions.height], AVVideoHeightKey,
+                                            nil];
+                if (compressionSettings)
+                    [compressionVideoSettings setObject:compressionSettings forKey:AVVideoCompressionPropertiesKey];
+            }
+            
+            // Add reader track output to the assetReader, and writer track input to the assetWriter
+            AVAssetReaderOutput *output = [AVAssetReaderTrackOutput assetReaderTrackOutputWithTrack:videoTrack outputSettings:decompressionVideoSettings];
+            [assetReader addOutput:output];
+            
+            AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:[videoTrack mediaType] outputSettings:compressionVideoSettings];
+            [assetWriter addInput:input];
+            
+            // Create and save an instance of AAPLSampleBufferChannel, which will coordinate the work of reading and writing sample buffers
+            videoSampleBufferChannel = [[AAPLSampleBufferChannel alloc] initWithAssetReaderOutput:output assetWriterInput:input];
+        }
 	}
 	
 	if (outError)

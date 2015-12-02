@@ -45,6 +45,9 @@
 @property (nonatomic, retain) IBOutlet NSView *frameView;
 @property (nonatomic, retain) IBOutlet NSPopUpButton *filterPopUpButton;
 
+@property (nonatomic, getter=shouldDecompressAudio) BOOL decompressAudio;
+@property (nonatomic, getter=shouldDecompressVideo) BOOL decompressVideo;
+
 - (IBAction)start:(id)sender;
 - (IBAction)cancel:(id)sender;
 @property (nonatomic, getter=isWritingSamples) BOOL writingSamples;

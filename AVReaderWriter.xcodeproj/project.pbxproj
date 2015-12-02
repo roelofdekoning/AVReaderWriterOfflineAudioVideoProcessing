@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AF4803F01C0F0CF1006EBAB5 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = AF4803EF1C0F0CF1006EBAB5 /* README.md */; };
 		EE33EA6D1370DF3100F77FCE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EE33EA6B1370DF3100F77FCE /* InfoPlist.strings */; };
 		EE33EA701370DF3100F77FCE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = EE33EA6F1370DF3100F77FCE /* main.m */; };
 		EE33EA761370DF3100F77FCE /* AAPLDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = EE33EA751370DF3100F77FCE /* AAPLDocument.m */; };
@@ -168,7 +167,6 @@
 			files = (
 				EE33EA701370DF3100F77FCE /* main.m in Sources */,
 				EE33EA761370DF3100F77FCE /* AAPLDocument.m in Sources */,
-				AF4803F01C0F0CF1006EBAB5 /* README.md in Sources */,
 				EEB8F96C1399AF67004FEB2E /* AAPLProgressPanelController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
