@@ -1,7 +1,7 @@
 # AVReaderWriterOfflineAudioVideoProcessing
 Make a copy of an AV file using Apple's AVReaderWriter
 
-AVReaderWriter demonstrates how to use AVAssetReader to read (and decode) sample data from a movie file, then use AVAssetWriter to (encode and) write the sample data to a new movie file. A toggle can be set for decompression (and subsequent compression) of audio and video tracks in a movie file. If both toggles are off, an exact copy should be made of the original movie file.
+AVReaderWriter demonstrates how to use AVAssetReader to read (and decode) sample data from a movie file, then use AVAssetWriter to (encode and) write the sample data to a new movie file. A toggle can be set for decompression (and subsequent compression) of audio and video tracks in a movie file. If both toggles are off, an exact copy should be made of the original movie file. Any timecode tracks will be ignored when reading/writing sample data.
 
 The execution of these concepts is concentrated in AAPLDocument.m.
 
