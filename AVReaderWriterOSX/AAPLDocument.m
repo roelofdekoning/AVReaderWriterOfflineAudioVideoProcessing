@@ -263,6 +263,14 @@
 	// Create asset reader outputs and asset writer inputs for the first audio track and first video track of the asset
 	if (success)
 	{
+        /*
+         1. Set -[AVAssetWriter shouldOptimizeForNetworkUse] to YES.
+         2. Set -[AVAssetWriter metadata] to the value of -[AVAsset metadata].
+         */
+        assetWriter.shouldOptimizeForNetworkUse = YES;
+        assetWriter.metadata = asset.metadata;
+      
+      
 		AVAssetTrack *audioTrack = nil, *videoTrack = nil;
 		
 		// Grab first audio track and first video track, if the asset has them
@@ -306,6 +314,16 @@
             [assetReader addOutput:output];
             
             AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:[audioTrack mediaType] outputSettings:compressionAudioSettings];
+          
+            /*
+             3. Set -[AVAssetWriterInput metadata] to the value of -[AVAssetTrack metadata].
+             5. Set -[AVAssetWriterInput languageCode] to the value of -[AVAssetTrack languageCode].
+             5. Set -[AVAssetWriterInput extendedLanguageTag] to the value of -[AVAssetTrack extendedLanguageTag].
+             */
+            input.metadata = audioTrack.metadata;
+            input.languageCode = audioTrack.languageCode;
+            input.extendedLanguageTag = audioTrack.extendedLanguageTag;
+          
             [assetWriter addInput:input];
             
             // Create and save an instance of AAPLSampleBufferChannel, which will coordinate the work of reading and writing sample buffers
@@ -393,6 +411,18 @@
             [assetReader addOutput:output];
             
             AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:[videoTrack mediaType] outputSettings:compressionVideoSettings];
+          
+            /*
+             3. Set -[AVAssetWriterInput metadata] to the value of -[AVAssetTrack metadata].
+             4. Set -[AVAssetWriterInput mediaTimeScale] to the value of -[AVAssetTrack naturalTimeScale] on the video track.
+             5. Set -[AVAssetWriterInput languageCode] to the value of -[AVAssetTrack languageCode].
+             5. Set -[AVAssetWriterInput extendedLanguageTag] to the value of -[AVAssetTrack extendedLanguageTag].
+             */
+            input.metadata = videoTrack.metadata;
+            input.mediaTimeScale = videoTrack.naturalTimeScale;
+            input.languageCode = videoTrack.languageCode;
+            input.extendedLanguageTag = videoTrack.extendedLanguageTag;
+
             [assetWriter addInput:input];
             
             // Create and save an instance of AAPLSampleBufferChannel, which will coordinate the work of reading and writing sample buffers
